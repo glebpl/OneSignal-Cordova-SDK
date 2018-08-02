@@ -425,7 +425,9 @@ class GenerateNotification {
 
       Notification notification = notifBuilder.build();
 
-      if (singleNotifWorkArounds)
+	  // Check for null added to origin code.
+	  // Fixes sound playing on Android 5-6
+      if (singleNotifWorkArounds && notifJob.overriddenSound != null)
          notifBuilder.setSound(notifJob.overriddenSound);
 
       return notification;
