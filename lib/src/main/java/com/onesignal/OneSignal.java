@@ -361,7 +361,7 @@ public class OneSignal {
    private static TrackAmazonPurchase trackAmazonPurchase;
    private static TrackFirebaseAnalytics trackFirebaseAnalytics;
 
-   public static final String VERSION = "030903";
+   public static final String VERSION = "031003";
 
    private static AdvertisingIdentifierProvider mainAdIdProvider = new AdvertisingIdProviderGPS();
 
@@ -514,9 +514,16 @@ public class OneSignal {
       return mInitBuilder;
    }
 
+   // Sets the global shared ApplicationContext for OneSignal
+   // This is set from all OneSignal entry points
+   //   - BroadcastReceivers, Services, and Activities
    static void setAppContext(Context context) {
+      boolean wasAppContextNull = (appContext == null);
       appContext = context.getApplicationContext();
-      OneSignalPrefs.startDelayedWrite();
+
+      // Prefs require a context to save, kick off write in-case it was waiting.
+      if (wasAppContextNull)
+         OneSignalPrefs.startDelayedWrite();
    }
 
    /**
@@ -1504,7 +1511,7 @@ public class OneSignal {
 
             if (!toSend.toString().equals("{}")) {
                OneSignalStateSynchronizer.sendTags(toSend, tagsHandler);
-            } else {
+            } else if (tagsHandler != null) {
                tagsHandler.onSuccess(existingKeys);
             }
          }
@@ -2017,19 +2024,12 @@ public class OneSignal {
               OneSignalPrefs.PREFS_GT_APP_ID,null);
    }
 
-   static boolean getSavedUserConsentStatus() { return getSavedUserConsentStatus(appContext); }
-
-   private static boolean getSavedUserConsentStatus(Context inContext) {
-      if (inContext == null)
-         return false;
-
+   static boolean getSavedUserConsentStatus() {
       return OneSignalPrefs.getBool(OneSignalPrefs.PREFS_ONESIGNAL, OneSignalPrefs.PREFS_ONESIGNAL_USER_PROVIDED_CONSENT, false);
    }
 
    static void saveUserConsentStatus(boolean consent) {
-      if (appContext == null)
-         return;
-
+      
       OneSignalPrefs.saveBool(OneSignalPrefs.PREFS_ONESIGNAL, OneSignalPrefs.PREFS_ONESIGNAL_USER_PROVIDED_CONSENT, consent);
    }
 
@@ -2591,10 +2591,6 @@ public class OneSignal {
     */
    public static void addPermissionObserver(OSPermissionObserver observer) {
 
-      //if applicable, check if the user provided privacy consent
-      if (shouldLogUserPrivacyConsentErrorMessageForMethodName("addPermissionObserver()"))
-         return;
-
       if (appContext == null) {
          Log(LOG_LEVEL.ERROR, "OneSignal.init has not been called. Could not add permission observer");
          return;
@@ -2632,10 +2628,6 @@ public class OneSignal {
     */
    public static void addSubscriptionObserver(OSSubscriptionObserver observer) {
 
-      //if applicable, check if the user provided privacy consent
-      if (shouldLogUserPrivacyConsentErrorMessageForMethodName("addSubscriptionObserver()"))
-         return;
-
       if (appContext == null) {
          Log(LOG_LEVEL.ERROR, "OneSignal.init has not been called. Could not add subscription observer");
          return;
@@ -2669,10 +2661,6 @@ public class OneSignal {
     * @param observer the instance of {@link OSSubscriptionObserver} that acts as the observer
     */
    public static void addEmailSubscriptionObserver(@NonNull OSEmailSubscriptionObserver observer) {
-
-      //if applicable, check if the user provided privacy consent
-      if (shouldLogUserPrivacyConsentErrorMessageForMethodName("addEmailSubscriptionObserver()"))
-         return;
 
       if (appContext == null) {
          Log(LOG_LEVEL.ERROR, "OneSignal.init has not been called. Could not add email subscription observer");
