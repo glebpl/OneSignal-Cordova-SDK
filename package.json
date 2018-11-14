@@ -48,7 +48,7 @@
     }
   ],
   "cordova": {
-    "id": "onesignal-cordova-plugin",
+    "id": "onesignal-cordova-plugin-fork",
     "platforms": [
       "android",
       "ios",
@@ -58,12 +58,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/onesignal/OneSignal-Cordova-SDK.git"
+    "url": "git+https://github.com/glebpl/OneSignal-Cordova-SDK"
   },
   "author": "Josh Kasten & Brad Hesse",
   "bugs": {
-    "url": "https://github.com/onesignal/OneSignal-Cordova-SDK/issues"
+    "url": "https://github.com/glebpl/OneSignal-Cordova-SDK/issues"
   },
-  "homepage": "https://github.com/onesignal/OneSignal-Cordova-SDK#readme"
+  "homepage": "https://github.com/glebpl/OneSignal-Cordova-SDK#readme"
 }
 
