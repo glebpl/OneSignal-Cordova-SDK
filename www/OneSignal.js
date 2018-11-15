@@ -278,7 +278,11 @@ OneSignal.prototype.userProvidedPrivacyConsent = function(callback) {
    cordova.exec(function() {}, function() {}, "OneSignalPush", "provideUserConsent", [granted]);
  }
 
-
+ // Fork: method added, creates ntf channel for Android >= 8
+ OneSignal.prototype.createChannel = function(channelId, channelName, options) {
+   cordova.exec(function() {}, function() {}, "OneSignalPush", "createChannel", [channelId, channelName, options || {}]);
+ }
+ 
 //-------------------------------------------------------------------
 
 if(!window.plugins)

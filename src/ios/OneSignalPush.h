@@ -71,6 +71,8 @@
 - (void)userProvidedPrivacyConsent:(CDVInvokedUrlCommand *)command;
 - (void)setRequiresUserPrivacyConsent:(CDVInvokedUrlCommand *)command;
 - (void)provideUserConsent:(CDVInvokedUrlCommand *)command;
+// Fork: method for Android 8
+- (void)createChannel:(CDVInvokedUrlCommand *)command;
     
     
 @end

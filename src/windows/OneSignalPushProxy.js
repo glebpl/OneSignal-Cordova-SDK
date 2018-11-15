@@ -83,6 +83,8 @@ module.exports = {
   addSubscriptionObserver: function (successCallback, errorCallback, params) { },
   setInFocusDisplaying: function (successCallback, errorCallback, params) { },
   getPermissionSubscriptionState: function (successCallback, errorCallback, params) { }
+  // Fork: Method for android
+  createChannel: function (successCallback, errorCallback, params) { }
 };
 
 require("cordova/exec/proxy").add("OneSignalPush", module.exports);

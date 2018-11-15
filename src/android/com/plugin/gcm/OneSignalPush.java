@@ -102,6 +102,8 @@ public class OneSignalPush extends CordovaPlugin {
   private static final String USER_PROVIDED_CONSENT = "userProvidedPrivacyConsent";
   private static final String SET_REQUIRES_CONSENT = "setRequiresUserPrivacyConsent";
   private static final String GRANT_CONSENT = "provideUserConsent";
+  // Fork: method added for Android 8
+  private static final String CREATE_CHANNEL = "createChannel";
   
   private static CallbackContext notifReceivedCallbackContext;
   private static CallbackContext notifOpenedCallbackContext;
@@ -469,6 +471,17 @@ public class OneSignalPush extends CordovaPlugin {
       } catch (JSONException e) {
          e.printStackTrace();
       }
+    } else if (CREATE_CHANNEL.equals(action)) {
+        // Fork: method added for Android 8
+        try {
+		    String channelId = data.getString(0);
+            String channelName = data.getString(1);
+			JSONObject jo = data.getJSONObject(2);
+            OneSignal.createNotificationChannel(channelId, channelName, jo);
+            result = true;
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
     else {
       result = false;
