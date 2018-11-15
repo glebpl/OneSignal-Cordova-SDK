@@ -947,7 +947,7 @@ public class OneSignal {
 
          Uri soundUri = OSUtils.getSoundUri(appContext, jo.optString("sound", null));
 
-         if (soundUri != null {
+         if (soundUri != null) {
             // Initial channel sound
             AudioAttributes audioAttributes = new AudioAttributes.Builder()
                     .setUsage(AudioAttributes.USAGE_NOTIFICATION)
