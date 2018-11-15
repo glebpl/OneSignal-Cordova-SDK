@@ -212,11 +212,13 @@ class GenerateNotification {
       
       NotificationCompat.Builder notifBuilder;
       try {
-         String channelId = NotificationChannelManager.createNotificationChannel(notifJob);
-         // Will throw if app is using 26.0.0-beta1 or older of the support library.
-         notifBuilder = new NotificationCompat.Builder(currentContext, channelId);
+        String channelId = NotificationChannelManager.createNotificationChannel(notifJob);
+        // Will throw if app is using 26.0.0-beta1 or older of the support library.
+        // Fork: Here is channel id will be set for Android >=8
+        notifBuilder = new NotificationCompat.Builder(currentContext, channelId);
       } catch(Throwable t) {
-         notifBuilder = new NotificationCompat.Builder(currentContext);
+        // Fork: This will work before API 26 (Android 8) 
+        notifBuilder = new NotificationCompat.Builder(currentContext);
       }
       
       String message = gcmBundle.optString("alert", null);
@@ -305,10 +307,8 @@ class GenerateNotification {
 
       if (isSoundEnabled(gcmBundle)) {
          Uri soundUri = OSUtils.getSoundUri(currentContext, gcmBundle.optString("sound", null));
-         if (soundUri != null) {
-            Log.d("===OS", "getBaseOneSignalNotificationBuilder, set soundUri " + soundUri);
+         if (soundUri != null)
             notifBuilder.setSound(soundUri);
-         }
          else
             notificationDefaults |= Notification.DEFAULT_SOUND;
       }
@@ -317,7 +317,6 @@ class GenerateNotification {
    }
 
    private static void removeNotifyOptions(NotificationCompat.Builder builder) {
-      Log.d("===OS", "removeNotifyOptions, sound will be NULL");
       builder.setOnlyAlertOnce(true)
              .setDefaults(0)
              .setSound(null)
@@ -424,11 +423,8 @@ class GenerateNotification {
          notifJob.overriddenBodyFromExtender = mContentText;
          notifJob.overriddenTitleFromExtender = mContentTitle;
          if (!notifJob.restoring) {
-            Log.d("===OS", "applyNotificationExtender, set sound: " + mNotification.sound);
             notifJob.overriddenFlags = mNotification.flags;
             notifJob.overriddenSound = mNotification.sound;
-         } else {
-            Log.d("===OS", "applyNotificationExtender, NO SOUND IS RESTORING");
          }
       } catch (Throwable t) {
          t.printStackTrace();
@@ -444,8 +440,6 @@ class GenerateNotification {
       boolean singleNotifWorkArounds = Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR1 && Build.VERSION.SDK_INT < Build.VERSION_CODES.N
                                        && !notifJob.restoring;
       
-      Log.d("===OS", "createSingleNotificationBeforeSummaryBuilder, overriddenSound is " + notifJob.overriddenSound + ", singleNotifWorkArounds is " + singleNotifWorkArounds);
-
       if (singleNotifWorkArounds) {
          if (notifJob.overriddenSound != null && !notifJob.overriddenSound.equals(notifJob.orgSound))
             notifBuilder.setSound(null);
@@ -492,8 +486,6 @@ class GenerateNotification {
    private static void createSummaryNotification(NotificationGenerationJob notifJob, OneSignalNotificationBuilder notifBuilder) {
       boolean updateSummary = notifJob.restoring;
       JSONObject gcmBundle = notifJob.jsonPayload;
-
-       Log.d("===OS", "createSummaryNotification is called");
 
       String group = gcmBundle.optString("grp", null);
 
@@ -600,9 +592,6 @@ class GenerateNotification {
             summaryMessage = summaryMessage.replace("$[notif_count]", "" + notificationCount);
 
          NotificationCompat.Builder summaryBuilder = getBaseOneSignalNotificationBuilder(notifJob).compatBuilder;
-
-         Log.d("===OS", "createSummaryNotification, updateSummary is " + updateSummary + ", overriddenSound=" + notifJob.overriddenSound);
-
          if (updateSummary)
             removeNotifyOptions(summaryBuilder);
          else {
@@ -615,14 +604,13 @@ class GenerateNotification {
 
          // The summary is designed to fit all notifications.
          // Default small and large icons are used instead of the payload options to enforce this.
-         // Fork: setting of small and large icons commented
          summaryBuilder.setContentIntent(summaryContentIntent)
               .setDeleteIntent(summaryDeleteIntent)
               .setContentTitle(currentContext.getPackageManager().getApplicationLabel(currentContext.getApplicationInfo()))
               .setContentText(summaryMessage)
               .setNumber(notificationCount)
-              // .setSmallIcon(getDefaultSmallIconId())
-              // .setLargeIcon(getDefaultLargeIcon())
+              .setSmallIcon(getDefaultSmallIconId())
+              .setLargeIcon(getDefaultLargeIcon())
               .setOnlyAlertOnce(updateSummary)
               .setGroup(group)
               .setGroupSummary(true);
@@ -676,23 +664,13 @@ class GenerateNotification {
          summaryBuilder.mActions.clear();
          addNotificationActionButtons(gcmBundle, summaryBuilder, summaryNotificationId, group);
          
-         // Fork: setting of small and large icons added
          summaryBuilder.setContentIntent(summaryContentIntent)
                        .setDeleteIntent(summaryDeleteIntent)
                        .setOnlyAlertOnce(updateSummary)
-                       .setSmallIcon(getSmallIconId(gcmBundle))
-                       .setLargeIcon(getLargeIcon(gcmBundle))
                        .setGroup(group)
                        .setGroupSummary(true);
 
          try {
-
-            Field mField = NotificationCompat.Builder.class.getDeclaredField("mChannelId");
-            mField.setAccessible(true);
-            String mChannelId = (String) mField.get(summaryBuilder);
-
-            Log.d("===OS", "mChannelId of summaryBuilder = " + mChannelId);
-
             summaryBuilder.setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY);
          }
          catch (Throwable t) {
@@ -700,18 +678,12 @@ class GenerateNotification {
          }
 
           if (notifJob.overriddenSound != null) {
-              Log.d("===OS", "createSummaryNotification, branch 2, set sound " + notifJob.overriddenSound);
               summaryBuilder.setSound(notifJob.overriddenSound);
           }
 
          summaryNotification = summaryBuilder.build();
-
-         Log.d("===OS", "createSummaryNotification, 1 sound of summaryNotification: " + summaryNotification.sound);
-
          addXiaomiSettings(notifBuilder, summaryNotification);
       }
-
-      Log.d("===OS", "createSummaryNotification, final sound of summaryNotification: " + summaryNotification.sound);
 
       NotificationManagerCompat.from(currentContext).notify(summaryNotificationId, summaryNotification);
    }
