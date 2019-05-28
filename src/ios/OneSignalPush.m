@@ -360,5 +360,15 @@ static Class delegateClass = nil;
     [OneSignal consentGranted:[command.arguments[0] boolValue]];
 }
 
+- (void)setExternalUserId:(CDVInvokedUrlCommand *)command {
+    NSString *externalId = command.arguments[0];
+    
+    [OneSignal setExternalUserId:externalId];
+}
+
+- (void)removeExternalUserId:(CDVInvokedUrlCommand *)command {
+    [OneSignal removeExternalUserId];
+}
+
 @end
 

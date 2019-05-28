@@ -278,11 +278,19 @@ OneSignal.prototype.userProvidedPrivacyConsent = function(callback) {
    cordova.exec(function() {}, function() {}, "OneSignalPush", "provideUserConsent", [granted]);
  }
 
+ OneSignal.prototype.setExternalUserId = function(externalId) {
+    cordova.exec(function() {}, function() {}, "OneSignalPush", "setExternalUserId", [externalId]);
+ }
+
+ OneSignal.prototype.removeExternalUserId = function() {
+    cordova.exec(function() {}, function() {}, "OneSignalPush", "removeExternalUserId", []);
+ }
+
  // Fork: method added, creates ntf channel for Android >= 8
  OneSignal.prototype.createChannel = function(channelId, channelName, options) {
    cordova.exec(function() {}, function() {}, "OneSignalPush", "createChannel", [channelId, channelName, options || {}]);
  }
- 
+
 //-------------------------------------------------------------------
 
 if(!window.plugins)

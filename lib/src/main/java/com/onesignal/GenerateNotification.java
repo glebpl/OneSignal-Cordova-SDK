@@ -61,7 +61,6 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.text.SpannableString;
 import android.text.style.StyleSpan;
-import android.util.Log;
 import android.widget.RemoteViews;
 
 import com.onesignal.OneSignalDbContract.NotificationTable;
@@ -212,13 +211,11 @@ class GenerateNotification {
       
       NotificationCompat.Builder notifBuilder;
       try {
-        String channelId = NotificationChannelManager.createNotificationChannel(notifJob);
-        // Will throw if app is using 26.0.0-beta1 or older of the support library.
-        // Fork: Here is channel id will be set for Android >=8
-        notifBuilder = new NotificationCompat.Builder(currentContext, channelId);
+         String channelId = NotificationChannelManager.createNotificationChannel(notifJob);
+         // Will throw if app is using 26.0.0-beta1 or older of the support library.
+         notifBuilder = new NotificationCompat.Builder(currentContext, channelId);
       } catch(Throwable t) {
-        // Fork: This will work before API 26 (Android 8) 
-        notifBuilder = new NotificationCompat.Builder(currentContext);
+         notifBuilder = new NotificationCompat.Builder(currentContext);
       }
       
       String message = gcmBundle.optString("alert", null);
@@ -235,7 +232,7 @@ class GenerateNotification {
       if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N ||
           !gcmBundle.optString("title").equals(""))
          notifBuilder.setContentTitle(getTitle(gcmBundle));
-      
+   
       try {
          BigInteger accentColor = getAccentColor(gcmBundle);
          if (accentColor != null)
@@ -348,7 +345,12 @@ class GenerateNotification {
       // Keeps notification from playing sound + vibrating again
       if (notifJob.restoring)
          removeNotifyOptions(notifBuilder);
-   
+
+      int makeRoomFor = 1;
+      if (group != null)
+         makeRoomFor = 2;
+      NotificationLimitManager.clearOldestOverLimit(currentContext, makeRoomFor);
+
       Notification notification;
 
       if (group != null) {
@@ -407,7 +409,7 @@ class GenerateNotification {
          
          // Fork: condition moved here from the beginning of method
          if(notifJob.overrideSettings != null && notifJob.overrideSettings.extender != null) {
-            notifBuilder.extend(notifJob.overrideSettings.extender);
+         notifBuilder.extend(notifJob.overrideSettings.extender);
          }
 
          mNotification = (Notification)mNotificationField.get(notifBuilder);
@@ -603,7 +605,7 @@ class GenerateNotification {
          }
 
          // The summary is designed to fit all notifications.
-         // Default small and large icons are used instead of the payload options to enforce this.
+         //   Default small and large icons are used instead of the payload options to enforce this.
          summaryBuilder.setContentIntent(summaryContentIntent)
               .setDeleteIntent(summaryDeleteIntent)
               .setContentTitle(currentContext.getPackageManager().getApplicationLabel(currentContext.getApplicationInfo()))
@@ -677,9 +679,10 @@ class GenerateNotification {
             //do nothing in this case...Android support lib 26 isn't in the project
          }
 
-          if (notifJob.overriddenSound != null) {
-              summaryBuilder.setSound(notifJob.overriddenSound);
-          }
+         // Fork: setting of sound added
+         if (notifJob.overriddenSound != null) {
+             summaryBuilder.setSound(notifJob.overriddenSound);
+         }
 
          summaryNotification = summaryBuilder.build();
          addXiaomiSettings(notifBuilder, summaryNotification);

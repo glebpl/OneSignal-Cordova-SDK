@@ -289,7 +289,21 @@ abstract class JobIntentService extends Service {
             public void complete() {
                 synchronized (mLock) {
                     if (mParams != null) {
-                        mParams.completeWork(mJobWork);
+                        try {
+                            mParams.completeWork(mJobWork);
+                            // The following catches are to prevent errors completely work that
+                            //    is done or hasn't started.
+                            // Example:
+                            // Caused by java.lang.IllegalArgumentException:
+                            //     Given work is not active: JobWorkItem {
+                            //       id=4 intent=Intent { (has extras) } dcount=1
+                            //     }
+                            // Issue: https://github.com/OneSignal/OneSignal-Android-SDK/issues/644
+                        } catch (SecurityException e) {
+                            Log.e(TAG, "SecurityException: Failed to run mParams.completeWork(mJobWork)!", e);
+                        } catch(IllegalArgumentException e) {
+                            Log.e(TAG, "IllegalArgumentException: Failed to run mParams.completeWork(mJobWork)!", e);
+                        }
                     }
                 }
             }
@@ -333,17 +347,26 @@ abstract class JobIntentService extends Service {
         public JobIntentService.GenericWorkItem dequeueWork() {
             JobWorkItem work;
             synchronized (mLock) {
-                if (mParams == null) {
+                if (mParams == null)
+                    return null;
+
+                try {
+                    work = mParams.dequeueWork();
+                } catch (SecurityException e) {
+                    // Work around for https://issuetracker.google.com/issues/63622293
+                    // https://github.com/OneSignal/OneSignal-Android-SDK/issues/673
+                    // Caller no longer running, last stopped +###ms because: last work dequeued
+                    Log.e(TAG, "Failed to run mParams.dequeueWork()!", e);
                     return null;
                 }
-                work = mParams.dequeueWork();
             }
+
             if (work != null) {
                 work.getIntent().setExtrasClassLoader(mService.getClassLoader());
                 return new WrapperWorkItem(work);
-            } else {
-                return null;
             }
+            else
+                return null;
         }
     }
 
@@ -489,6 +512,7 @@ abstract class JobIntentService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        doStopCurrentWork();
         synchronized (mCompatQueue) {
             mDestroyed = true;
             mCompatWorkEnqueuer.serviceProcessingFinished();

@@ -2,7 +2,7 @@
 <plugin xmlns="http://www.phonegap.com/ns/plugins/1.0"
     xmlns:android="http://schemas.android.com/apk/res/android"
     id="onesignal-cordova-plugin-fork"
-    version="2.4.5">
+    version="2.4.7">
 
 
   <name>OneSignal Push Notifications Fork</name>
@@ -83,7 +83,7 @@
       <string>production</string>
     </config-file>
 
-    <framework src="OneSignal" type="podspec" spec="2.9.3" />
+    <framework src="OneSignal" type="podspec" spec="2.10.0" />
     <header-file src="src/ios/OneSignalPush.h" />
     <source-file src="src/ios/OneSignalPush.m" />
 
