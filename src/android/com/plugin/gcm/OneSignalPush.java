@@ -613,10 +613,6 @@ public class OneSignalPush extends CordovaPlugin {
       } catch (JSONException e){
         e.printStackTrace();
       }
-    } else {
-      result = false;
-      Log.e(TAG, "Invalid action : " + action);
-      callbackError(callbackContext, "Invalid action : " + action);
     } else if (CREATE_CHANNEL.equals(action)) {
         // Fork: method added for Android 8
         try {
@@ -648,8 +644,7 @@ public class OneSignalPush extends CordovaPlugin {
         t.printStackTrace();
       }
 
-    }
-    else {
+    } else {
       result = false;
       Log.e(TAG, "Invalid action : " + action);
       callbackError(callbackContext, "Invalid action : " + action);
