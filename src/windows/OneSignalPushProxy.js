@@ -85,6 +85,8 @@ module.exports = {
   getPermissionSubscriptionState: function (successCallback, errorCallback, params) { }
   // Fork: Method for android
   createChannel: function (successCallback, errorCallback, params) { }
+  // Fork: Method for android, will not be applied for windows
+  useProxy: function (successCallback, errorCallback, params) { }
 };
 
 require("cordova/exec/proxy").add("OneSignalPush", module.exports);
