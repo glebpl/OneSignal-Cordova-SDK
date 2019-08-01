@@ -116,6 +116,8 @@ public class OneSignalPush extends CordovaPlugin {
 
   // Fork: method added for Android 8
   private static final String CREATE_CHANNEL = "createChannel";
+  // Fork: method added to use Proxy
+  private static final String USE_PROXY = "useProxy";
   
   private static CallbackContext notifReceivedCallbackContext;
   private static CallbackContext notifOpenedCallbackContext;
@@ -568,6 +570,26 @@ public class OneSignalPush extends CordovaPlugin {
         } catch (JSONException e) {
             e.printStackTrace();
         }
+    } else if (USE_PROXY.equals(action)) {
+      // Fork: method added to use Proxy for REST requests
+      try {
+        JSONObject jo = data.getJSONObject(0);
+        
+        if(jo.has("baseUrl")) {
+          OneSignal.useBaseUrl(jo.getString("baseUrl"));
+        } else {
+          String host = jo.getString("host");
+          int port = jo.getInt("port");
+          if(jo.has("user") && jo.has("pass")) {
+            OneSignal.useProxy(host, port, jo.getString("user"), jo.getString("pass"));
+          } else {
+            OneSignal.useProxy(host, port, null, null);
+          }
+        }
+      } catch(Throwable t) {
+        t.printStackTrace();
+      }
+
     }
     else {
       result = false;

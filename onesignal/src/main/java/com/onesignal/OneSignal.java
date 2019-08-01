@@ -29,6 +29,10 @@ package com.onesignal;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+
+import java.net.Authenticator;
+import java.net.PasswordAuthentication;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -2886,5 +2890,82 @@ public class OneSignal {
          emailUpdateHandler.onFailure(new EmailUpdateError(EmailErrorType.NETWORK, "Failed due to network failure. Will retry on next sync."));
          emailUpdateHandler = null;
       }
+   }
+
+   /**
+    * Fork: use Proxy for requests
+    */
+   public static class ProxySettings {
+      private String host;
+      private int port = 0;
+      private String baseUrl;
+
+      ProxySettings(String baseUrl) {
+         this.baseUrl = baseUrl;
+      }
+
+      ProxySettings(String host, int port) {
+         this.host = host;
+         this.port = port;
+      }
+
+      public String getBaseUrl() {
+         return baseUrl;
+      }
+
+      public boolean isSocks() {
+         return host != null && port > 0;
+      }
+
+      public String getHost() {
+         return host;
+      }
+
+      public int getPort() {
+         return port;
+      }
+   }
+
+   /**
+    * Fork: use Proxy for requests
+    */
+   private static ProxySettings proxySettings;
+
+   public static void useBaseUrl(final String baseUrl) {
+      proxySettings = new ProxySettings(baseUrl);
+   }
+   
+   /**
+    * Fork: use Proxy for requests
+    * Registers authorization handler for SOCKS Proxy server
+    */
+   public static void useProxy(final String host, final int port, final String user, final String pass) {
+      proxySettings = new ProxySettings(host, port);
+      
+      if(user != null && pass != null) {
+         Authenticator.setDefault(new Authenticator() {
+            @Override
+			   protected PasswordAuthentication getPasswordAuthentication() {
+               String reqHost = getRequestingHost();
+               int reqPort = getRequestingPort();
+
+               Log(LOG_LEVEL.DEBUG, "getPasswordAuthentication handler, reqHost: " + reqHost + ", reqPort: " + reqPort);
+
+               if (reqHost.equalsIgnoreCase(host) && port == reqPort) {
+                  Log(LOG_LEVEL.DEBUG, "getPasswordAuthentication handler: port and host checked, return PasswordAuthentication user: " + user + ", pass: " + pass);
+                  return new PasswordAuthentication(user, pass.toCharArray());
+               }
+
+               return null;
+            }
+         });
+      }
+   }
+
+   /**
+    * Fork: use Proxy for requests
+    */
+   public static ProxySettings getProxySettings() {
+      return proxySettings;
    }
 }

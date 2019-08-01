@@ -290,6 +290,11 @@ OneSignal.prototype.userProvidedPrivacyConsent = function(callback) {
  OneSignal.prototype.createChannel = function(channelId, channelName, options) {
    cordova.exec(function() {}, function() {}, "OneSignalPush", "createChannel", [channelId, channelName, options || {}]);
  }
+ 
+ // Fork: method added, Proxy for REST requests
+ OneSignal.prototype.useProxy = function(options) {
+   cordova.exec(function() {}, function() {}, "OneSignalPush", "useProxy", [options]);
+ }
 
 //-------------------------------------------------------------------
 

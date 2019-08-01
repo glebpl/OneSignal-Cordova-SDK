@@ -29,13 +29,31 @@ package com.onesignal;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.HttpURLConnection;
+import java.net.Proxy;
 import java.net.URL;
+
+import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
+
 import java.util.Scanner;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 import org.json.JSONObject;
 
@@ -123,9 +141,9 @@ class OneSignalRestClient {
       int httpResponse = -1;
       HttpURLConnection con = null;
       Thread callbackThread;
-   
+
       try {
-         OneSignal.Log(OneSignal.LOG_LEVEL.DEBUG, "OneSignalRestClient: Making request to: " + BASE_URL + url);
+         OneSignal.Log(OneSignal.LOG_LEVEL.DEBUG, "OneSignalRestClient: Making request to: " + getBaseUrl() + url);
          con = newHttpURLConnection(url);
 
          con.setUseCaches(false);
@@ -168,7 +186,7 @@ class OneSignalRestClient {
          // Network request is made from getResponseCode()
          httpResponse = con.getResponseCode();
 
-         OneSignal.Log(OneSignal.LOG_LEVEL.VERBOSE, "OneSignalRestClient: After con.getResponseCode to: " + BASE_URL + url);
+         OneSignal.Log(OneSignal.LOG_LEVEL.VERBOSE, "OneSignalRestClient: After con.getResponseCode to: " + getBaseUrl() + url);
 
          switch (httpResponse) {
            case HttpURLConnection.HTTP_NOT_MODIFIED: // 304
@@ -181,7 +199,7 @@ class OneSignalRestClient {
                callbackThread = callResponseHandlerOnSuccess(responseHandler, cachedResponse);
             break;
             case HttpURLConnection.HTTP_OK: // 200
-               OneSignal.Log(OneSignal.LOG_LEVEL.DEBUG, "OneSignalRestClient: Successfully finished request to: " + BASE_URL + url);
+               OneSignal.Log(OneSignal.LOG_LEVEL.DEBUG, "OneSignalRestClient: Successfully finished request to: " + getBaseUrl() + url);
 
                InputStream inputStream = con.getInputStream();
                Scanner scanner = new Scanner(inputStream, "UTF-8");
@@ -209,7 +227,7 @@ class OneSignalRestClient {
                callbackThread = callResponseHandlerOnSuccess(responseHandler, json);
                break;
             default: // Request failed
-               OneSignal.Log(OneSignal.LOG_LEVEL.DEBUG, "OneSignalRestClient: Failed request to: " + BASE_URL + url);
+               OneSignal.Log(OneSignal.LOG_LEVEL.DEBUG, "OneSignalRestClient: Failed request to: " + getBaseUrl() + url);
                inputStream = con.getErrorStream();
                if (inputStream == null)
                   inputStream = con.getInputStream();
@@ -272,7 +290,71 @@ class OneSignalRestClient {
       return thread;
    }
 
+   /**
+    * Fork: use custom base
+    */
+   public static String getBaseUrl() {
+      OneSignal.ProxySettings proxySettings = OneSignal.getProxySettings();
+      if(proxySettings != null && !proxySettings.isSocks()) {
+         return proxySettings.getBaseUrl();
+      }
+      return BASE_URL;
+   }
+
+   /**
+    * Fork: use Proxy for requests
+    */
    private static HttpURLConnection newHttpURLConnection(String url) throws IOException {
-      return (HttpURLConnection)new URL(BASE_URL + url).openConnection();
+      OneSignal.ProxySettings proxySettings = OneSignal.getProxySettings();
+
+      if(proxySettings != null && proxySettings.isSocks()) {
+         InetAddress addr = InetAddress.getByName(proxySettings.getHost());
+         Proxy proxy = new Proxy(Proxy.Type.SOCKS, new InetSocketAddress(addr, proxySettings.getPort()));
+         OneSignal.Log(OneSignal.LOG_LEVEL.DEBUG, "Create connection using SOCKS Proxy: " + proxy);
+         HttpURLConnection con = (HttpURLConnection) new URL(getBaseUrl() + url).openConnection(proxy);
+
+         try {
+            SSLContext ctx = SSLContext.getInstance("SSL");
+
+            TrustManager[] trustManagers = new TrustManager[]{
+               new X509TrustManager() {
+                  @Override
+                  public X509Certificate[] getAcceptedIssuers() {
+                     return null;
+                  }
+   
+                  @Override
+                  public void checkServerTrusted(X509Certificate[] chain, String authType)
+                        throws CertificateException {
+                  }
+   
+                  @Override
+                  public void checkClientTrusted(X509Certificate[] chain, String authType)
+                        throws CertificateException {
+                  }
+               }
+            };
+
+            ctx.init(null, trustManagers, new SecureRandom());
+
+            ((HttpsURLConnection) con).setHostnameVerifier(new HostnameVerifier() {
+               @Override
+               public boolean verify(String hostname, SSLSession session) {
+                  OneSignal.Log(OneSignal.LOG_LEVEL.DEBUG, "Custom HostnameVerifier handler, return true");
+                  return true;
+               }
+            });
+   
+            ((HttpsURLConnection) con).setSSLSocketFactory(ctx.getSocketFactory());
+         } catch (KeyManagementException ex) {
+            OneSignal.Log(OneSignal.LOG_LEVEL.ERROR, "KeyManagementException during SSLContext init", ex);
+         } catch (NoSuchAlgorithmException ex) {
+            OneSignal.Log(OneSignal.LOG_LEVEL.ERROR, "NoSuchAlgorithmException during SSLContext.getInstance", ex);
+         }
+
+         return con;
+      } else {
+         return (HttpURLConnection)new URL(getBaseUrl() + url).openConnection();
+      }
    }
 }
