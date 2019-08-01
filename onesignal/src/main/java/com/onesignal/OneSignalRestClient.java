@@ -27,6 +27,8 @@
 
 package com.onesignal;
 
+import android.net.TrafficStats;
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -34,12 +36,15 @@ import android.util.Log;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+// Fork
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.HttpURLConnection;
+// Fork
 import java.net.Proxy;
 import java.net.URL;
 
+// Fork
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.KeyManagementException;
@@ -48,6 +53,7 @@ import java.security.cert.X509Certificate;
 
 import java.util.Scanner;
 
+// Fork
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -67,6 +73,8 @@ class OneSignalRestClient {
    static final String CACHE_KEY_REMOTE_PARAMS = "CACHE_KEY_REMOTE_PARAMS";
 
    private static final String BASE_URL = "https://onesignal.com/api/v1/";
+   
+   private static final int THREAD_ID = 10000;
    private static final int TIMEOUT = 120_000;
    private static final int GET_TIMEOUT = 60_000;
    
@@ -142,7 +150,12 @@ class OneSignalRestClient {
       HttpURLConnection con = null;
       Thread callbackThread;
 
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+         TrafficStats.setThreadStatsTag(THREAD_ID);
+      }
+
       try {
+         // Fork: custom base url to be used as proxy
          OneSignal.Log(OneSignal.LOG_LEVEL.DEBUG, "OneSignalRestClient: Making request to: " + getBaseUrl() + url);
          con = newHttpURLConnection(url);
 
@@ -185,7 +198,8 @@ class OneSignalRestClient {
 
          // Network request is made from getResponseCode()
          httpResponse = con.getResponseCode();
-
+         
+         // Fork: custom base url to be used as proxy
          OneSignal.Log(OneSignal.LOG_LEVEL.VERBOSE, "OneSignalRestClient: After con.getResponseCode to: " + getBaseUrl() + url);
 
          switch (httpResponse) {
@@ -199,6 +213,7 @@ class OneSignalRestClient {
                callbackThread = callResponseHandlerOnSuccess(responseHandler, cachedResponse);
             break;
             case HttpURLConnection.HTTP_OK: // 200
+               // Fork: custom base url to be used as proxy
                OneSignal.Log(OneSignal.LOG_LEVEL.DEBUG, "OneSignalRestClient: Successfully finished request to: " + getBaseUrl() + url);
 
                InputStream inputStream = con.getInputStream();
@@ -227,6 +242,7 @@ class OneSignalRestClient {
                callbackThread = callResponseHandlerOnSuccess(responseHandler, json);
                break;
             default: // Request failed
+               // Fork: custom base url to be used as proxy
                OneSignal.Log(OneSignal.LOG_LEVEL.DEBUG, "OneSignalRestClient: Failed request to: " + getBaseUrl() + url);
                inputStream = con.getErrorStream();
                if (inputStream == null)
@@ -291,7 +307,7 @@ class OneSignalRestClient {
    }
 
    /**
-    * Fork: use custom base
+    * Fork: custom base url to be used as proxy
     */
    public static String getBaseUrl() {
       OneSignal.ProxySettings proxySettings = OneSignal.getProxySettings();
