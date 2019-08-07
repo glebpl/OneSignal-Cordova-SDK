@@ -63,6 +63,9 @@
 - (void)setUnauthenticatedEmail:(CDVInvokedUrlCommand *)command;
 - (void)logoutEmail:(CDVInvokedUrlCommand *)command;
 
+// Fork: use proxy for REST requests
+- (void)useProxy:(CDVInvokedUrlCommand *)command;
+
 // Android Only
 - (void)enableVibrate:(CDVInvokedUrlCommand*)command;
 - (void)enableSound:(CDVInvokedUrlCommand*)command;
@@ -73,6 +76,6 @@
 - (void)provideUserConsent:(CDVInvokedUrlCommand *)command;
 // Fork: method for Android 8
 - (void)createChannel:(CDVInvokedUrlCommand *)command;
-    
+
     
 @end
