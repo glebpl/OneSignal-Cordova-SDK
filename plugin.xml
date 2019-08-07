@@ -84,7 +84,8 @@
     </config-file>
 
     <!--<framework src="OneSignal" type="podspec" spec="2.10.0" />-->
-	<framework src="./onesignal-ios" custom="true" />
+	<source-file src="onesignal-ios/iOS_SDK/OneSignalSDK/Framework/OneSignal.framework" target-dir="lib" framework="true" />
+	<framework src="onesignal-ios/iOS_SDK/OneSignalSDK/Framework/OneSignal.framework" embed="true" custom="true" />
     <header-file src="src/ios/OneSignalPush.h" />
     <source-file src="src/ios/OneSignalPush.m" />
 
