@@ -274,6 +274,15 @@ static Class delegateClass = nil;
     [OneSignal setLogLevel:[options[@"logLevel"] intValue] visualLevel:[options[@"visualLevel"] intValue]];
 }
 
+// Fork: Use Proxy for REST requests
+- (void)useProxy:(CDVInvokedUrlCommand*)command {
+    NSDictionary* options = command.arguments[0];
+    if ([options objectForKey:@"baseUrl"]) {
+        // Another url will be used instead of default SERVER_URL
+        [OneSignal useBaseUrl:[options[@"baseUrl"]]];
+    }
+}
+
 // Android only
 - (void)enableVibrate:(CDVInvokedUrlCommand*)command {}
 - (void)enableSound:(CDVInvokedUrlCommand*)command {}
