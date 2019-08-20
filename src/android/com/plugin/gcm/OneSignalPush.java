@@ -174,10 +174,12 @@ public class OneSignalPush extends CordovaPlugin {
     callbackContext.sendPluginResult(pluginResult);
   }
   
+  // Fork: channels creation 
   static boolean isValidResourceName(String name) {
     return (name != null && !name.matches("^[0-9]"));
   }
 
+  // Fork: channels creation
   private Uri getSoundUri(Context context, String sound) {
     Resources resources = context.getResources();
     String packageName = context.getPackageName();

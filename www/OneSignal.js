@@ -301,7 +301,7 @@ OneSignal.prototype.addTriggers = function(triggers) {
 }
 
 OneSignal.prototype.addTrigger = function(key, value) {
-    var obj = {};// Fork: fix for old androids
+    var obj = {};
     obj[key] = value;
     OneSignal.prototype.addTriggers(obj);
 }
