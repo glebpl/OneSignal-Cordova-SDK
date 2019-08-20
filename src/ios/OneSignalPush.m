@@ -279,7 +279,7 @@ static Class delegateClass = nil;
     NSDictionary* options = command.arguments[0];
     if ([options objectForKey:@"baseUrl"]) {
         // Another url will be used instead of default SERVER_URL
-        [OneSignal useBaseUrl:[options[@"baseUrl"]]];
+        [OneSignal useBaseUrl:[options objectForKey:@"baseUrl"]];
     }
 }
 
