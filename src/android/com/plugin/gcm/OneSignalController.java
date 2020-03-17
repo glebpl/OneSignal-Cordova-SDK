@@ -346,6 +346,36 @@ public class OneSignalController {
   }
 
   /**
+   * Fork: Finds all notification channels for the application
+   * @param appContext
+   * @param callbackContext
+   * @return
+   */
+  public static boolean getNotificationChannels(Context appContext, CallbackContext callbackContext) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      NotificationManager notificationManager = (NotificationManager) appContext.getSystemService(Context.NOTIFICATION_SERVICE);
+      List<NotificationChannel> list = notificationManager.getNotificationChannels();
+      JSONArray resultItems = new JSONArray();
+      try {
+        for (int i = 1; i < list.size(); ++i) {
+          JSONObject channelJson = new JSONObject();
+          NotificationChannel channel = list.get(i);
+          channelJson.put("id", channel.getId());
+          channelJson.put("name", channel.getName());
+          channelJson.put("sound", channel.getSound());
+          resultItems.put(channelJson);
+        }
+        JSONObject result = new JSONObject();
+        result.put("channels", resultItems);
+        CallbackHelper.callbackSuccess(callbackContext, result);
+      } catch (Throwable e) {
+        CallbackHelper.callbackError(callbackContext, e.getMessage());
+      }
+    }
+    return true;
+  }
+
+  /**
    * Fork
    * Checks if channel exists
    * @param appContext
@@ -353,7 +383,7 @@ public class OneSignalController {
    * @param data
    * @return
    */
-  public static boolean checkChannelExists(Context appContext, CallbackContext callbackContext, JSONArray data) {
+  public static boolean checkNotificationChannelExists(Context appContext, CallbackContext callbackContext, JSONArray data) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
       try {
         String channelId = data.getString(0);

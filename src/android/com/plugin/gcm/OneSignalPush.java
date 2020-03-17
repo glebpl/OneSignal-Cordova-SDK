@@ -100,6 +100,8 @@ public class OneSignalPush extends CordovaPlugin {
   // Fork: method added for Android 8
   private static final String CREATE_CHANNEL = "createChannel";
   // Fork: method added
+  private static final String GET_CHANNELS = "getChannels";
+  // Fork: method added
   private static final String HAS_CHANNEL = "hasChannel";
   // Fork: method added to change sound creating new channel
   private static final String DELETE_CHANNEL = "deleteChannel";
@@ -320,8 +322,16 @@ public class OneSignalPush extends CordovaPlugin {
         break;
 
       // Fork
+      case GET_CHANNELS:
+        result = OneSignalController.getNotificationChannels(
+                this.cordova.getActivity().getApplicationContext(),
+                callbackContext
+        );
+        break;
+
+      // Fork
       case HAS_CHANNEL:
-        result = OneSignalController.checkChannelExists(
+        result = OneSignalController.checkNotificationChannelExists(
                 this.cordova.getActivity().getApplicationContext(),
                 callbackContext,
                 data

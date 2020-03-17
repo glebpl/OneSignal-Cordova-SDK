@@ -393,6 +393,11 @@ OneSignal.prototype.sendOutcomeWithValue = function(name, value, callback) {
    cordova.exec(function() {}, function() {}, "OneSignalPush", "createChannel", [channelId, channelName, options || {}]);
  }
 
+ // Fork: method added, finds all ntf channels for Android >= 8
+ OneSignal.prototype.getChannels = function(onSuccess, onError) {
+   cordova.exec(onSuccess || noop, onError || noop, "OneSignalPush", "getChannels", []);
+ }
+
  // Fork: method added, deletes ntf channel for Android >= 8
  OneSignal.prototype.hasChannel = function(channelId, onSuccess, onError) {
    cordova.exec(onSuccess || noop, onError || noop, "OneSignalPush", "hasChannel", [channelId]);

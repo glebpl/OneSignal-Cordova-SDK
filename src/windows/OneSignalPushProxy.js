@@ -86,7 +86,13 @@ module.exports = {
   // Fork: Method for android
   createChannel: function (channelId, channelName, options) { }
   // Fork: Method for android
-  hasChannel: function (params, successCallback, errorCallback) {
+  getChannels: function (successCallback, errorCallback) {
+    if(successCallback) {
+      successCallback([]);
+    }
+  }
+  // Fork: Method for android
+  hasChannel: function (channelId, successCallback, errorCallback) {
     if(successCallback) {
       successCallback(true);
     }
