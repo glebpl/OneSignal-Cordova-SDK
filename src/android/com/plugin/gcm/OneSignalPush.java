@@ -27,6 +27,20 @@
 
 package com.plugin.gcm;
 
+import android.app.Activity;
+// Fork
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.content.Context;
+// Fork
+import android.content.ContentResolver;
+import android.content.res.Resources;
+import android.graphics.Color;
+import android.media.AudioAttributes;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Bundle;
+
 import android.util.Log;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
