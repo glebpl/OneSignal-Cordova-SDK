@@ -19,7 +19,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Collection;
-
+// Fork
+import java.util.List;
+// END Fork
 
 import com.onesignal.OneSignal;
 import com.onesignal.OSNotification;
