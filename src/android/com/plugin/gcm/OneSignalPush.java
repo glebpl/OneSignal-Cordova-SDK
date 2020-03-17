@@ -27,20 +27,6 @@
 
 package com.plugin.gcm;
 
-import android.app.Activity;
-// Fork
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.content.Context;
-// Fork
-import android.content.ContentResolver;
-import android.content.res.Resources;
-import android.graphics.Color;
-import android.media.AudioAttributes;
-import android.net.Uri;
-import android.os.Build;
-import android.os.Bundle;
-
 import android.util.Log;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
@@ -55,10 +41,6 @@ import com.onesignal.OSInAppMessageAction;
 import com.onesignal.OneSignal.NotificationOpenedHandler;
 import com.onesignal.OneSignal.NotificationReceivedHandler;
 import com.onesignal.OneSignal.InAppMessageClickHandler;
-
-import com.onesignal.OSPermissionObserver;
-import com.onesignal.OSEmailSubscriptionObserver;
-import com.onesignal.OSSubscriptionObserver;
 
 public class OneSignalPush extends CordovaPlugin {
   private static final String TAG = "OneSignalPush";
@@ -117,6 +99,8 @@ public class OneSignalPush extends CordovaPlugin {
 
   // Fork: method added for Android 8
   private static final String CREATE_CHANNEL = "createChannel";
+  // Fork: method added to change sound creating new channel
+  private static final String DELETE_CHANNEL = "deleteChannel";
   // Fork: method added to use Proxy
   private static final String USE_PROXY = "useProxy";
 
@@ -167,67 +151,6 @@ public class OneSignalPush extends CordovaPlugin {
     } catch (JSONException e) {
       Log.e(TAG, "execute: Got JSON Exception " + e.getMessage());
       return false;
-    }
-  }
-
-  // Fork: channels creation 
-  static boolean isValidResourceName(String name) {
-    return (name != null && !name.matches("^[0-9]"));
-  }
-
-  // Fork: channels creation
-  private Uri getSoundUri(Context context, String sound) {
-    Resources resources = context.getResources();
-    String packageName = context.getPackageName();
-    int soundId;
-
-    if (isValidResourceName(sound)) {
-        soundId = resources.getIdentifier(sound, "raw", packageName);
-        if (soundId != 0)
-            return Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + packageName + "/" + soundId);
-    }
-
-    soundId = resources.getIdentifier("onesignal_default_sound", "raw", packageName);
-
-    if (soundId != 0)
-        return Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + packageName + "/" + soundId);
-
-    return null;
-  }
-
-  /**
-   * Fork: method added
-   * Creates notification channel
-   * @param channelId
-   * @param channelName
-   * @param jo
-   */
-  private void createNotificationChannel(String channelId, String channelName, JSONObject jo) {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        int importance = NotificationManager.IMPORTANCE_HIGH;
-        NotificationChannel notificationChannel = new NotificationChannel(channelId, channelName, importance);
-
-        notificationChannel.enableLights(true);
-        notificationChannel.setLightColor(Color.RED);
-        notificationChannel.enableVibration(true);
-        notificationChannel.setVibrationPattern(new long[]{0, 800});
-        Context appContext = this.cordova.getActivity().getApplicationContext();
-
-        Uri soundUri = getSoundUri(appContext, jo.optString("sound", null));
-
-        if (soundUri != null) {
-            // Initial channel sound
-            AudioAttributes audioAttributes = new AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_NOTIFICATION)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .build();
-
-            notificationChannel.setSound(soundUri, audioAttributes);
-        }
-
-        NotificationManager notificationManager = (NotificationManager)appContext.getSystemService(Context.NOTIFICATION_SERVICE);
-
-        notificationManager.createNotificationChannel(notificationChannel);
     }
   }
 
@@ -389,12 +312,19 @@ public class OneSignalPush extends CordovaPlugin {
         result = OneSignalOutcomeController.sendOutcomeWithValue(callbackContext, data);
         break;
       
+      // Fork
       case CREATE_CHANNEL:
-        result = true;
+        result = OneSignalController.createNotificationChannel(this.cordova.getActivity().getApplicationContext(), data);
         break;
 
+      // Fork
+      case DELETE_CHANNEL:
+        result = OneSignalController.deleteNotificationChannel(this.cordova.getActivity().getApplicationContext(), data);
+        break;
+
+      // Fork
       case USE_PROXY:
-        result = true;
+        result = OneSignalController.useProxy(data);
         break;
 
         default:

@@ -389,6 +389,11 @@ OneSignal.prototype.sendOutcomeWithValue = function(name, value, callback) {
  OneSignal.prototype.createChannel = function(channelId, channelName, options) {
    cordova.exec(function() {}, function() {}, "OneSignalPush", "createChannel", [channelId, channelName, options || {}]);
  }
+
+ // Fork: method added, deletes ntf channel for Android >= 8
+ OneSignal.prototype.deleteChannel = function(channelId) {
+   cordova.exec(function() {}, function() {}, "OneSignalPush", "deleteChannel", [channelId]);
+ }
  
  // Fork: method added, Proxy for REST requests
  OneSignal.prototype.useProxy = function(options) {

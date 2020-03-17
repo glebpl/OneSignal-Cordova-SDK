@@ -76,6 +76,18 @@
 - (void)provideUserConsent:(CDVInvokedUrlCommand *)command;
 // Fork: method for Android 8
 - (void)createChannel:(CDVInvokedUrlCommand *)command;
+// Fork: method for Android 8
+- (void)deleteChannel:(CDVInvokedUrlCommand *)command;
 
+// in app
+- (void)setInAppMessageClickHandler:(CDVInvokedUrlCommand*)command;
+- (void)addTriggers:(CDVInvokedUrlCommand*)command;
+- (void)removeTriggersForKeys:(CDVInvokedUrlCommand*)command;
+- (void)getTriggerValueForKey:(CDVInvokedUrlCommand*)command;
+- (void)pauseInAppMessages:(CDVInvokedUrlCommand*)command;
     
+// outcomes
+- (void)sendOutcome:(CDVInvokedUrlCommand*)command;
+- (void)sendUniqueOutcome:(CDVInvokedUrlCommand*)command;
+- (void)sendOutcomeWithValue:(CDVInvokedUrlCommand*)command;
 @end
