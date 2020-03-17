@@ -1,5 +1,5 @@
 <manifest
-    xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.onesignal">
 
     <!-- OneSignal SDK has runtime checks Android version. -->
@@ -61,7 +61,7 @@
     <!-- End: ShortcutBadger -->
 
     <application>
-        <receiver android:name="com.onesignal.NotificationOpenedReceiver" />
+                        <receiver android:name="com.onesignal.NotificationOpenedReceiver" />
 
         <service android:name="com.onesignal.GcmIntentService" />
 

@@ -30,7 +30,10 @@ package com.onesignal;
 import android.provider.BaseColumns;
 
 class OneSignalDbContract {
-   OneSignalDbContract() {}
+
+   OneSignalDbContract() {
+
+   }
 
    static abstract class NotificationTable implements BaseColumns {
       public static final String TABLE_NAME = "notification";
@@ -55,5 +58,29 @@ class OneSignalDbContract {
       public static final String INDEX_CREATE_COLLAPSE_ID = "CREATE INDEX notification_collapse_id_idx ON notification(collapse_id); ";
       public static final String INDEX_CREATE_CREATED_TIME = "CREATE INDEX notification_created_time_idx ON notification(created_time); ";
       public static final String INDEX_CREATE_EXPIRE_TIME = "CREATE INDEX notification_expire_time_idx ON notification(expire_time); ";
+   }
+
+   static abstract class OutcomeEventsTable implements BaseColumns {
+      public static final String TABLE_NAME = "outcome";
+      public static final String COLUMN_NAME_NOTIFICATION_IDS = "notification_ids"; // OneSignal Notification Ids
+      public static final String COLUMN_NAME_TIMESTAMP = "timestamp";
+      public static final String COLUMN_NAME_NAME = "name";
+      public static final String COLUMN_NAME_SESSION = "session";
+      public static final String COLUMN_NAME_WEIGHT = "weight";
+   }
+
+   static abstract class CachedUniqueOutcomeNotificationTable implements BaseColumns {
+      public static final String TABLE_NAME = "cached_unique_outcome_notification";
+      public static final String COLUMN_NAME_NOTIFICATION_ID = "notification_id"; // OneSignal Notification Id
+      public static final String COLUMN_NAME_NAME = "name";
+   }
+
+   static abstract class InAppMessageTable implements BaseColumns {
+      public static final String TABLE_NAME = "in_app_message";
+      public static final String COLUMN_NAME_MESSAGE_ID = "message_id"; // OneSignal IAM Ids
+      public static final String COLUMN_NAME_DISPLAY_QUANTITY = "display_quantity";
+      public static final String COLUMN_NAME_LAST_DISPLAY = "last_display";
+      public static final String COLUMN_CLICK_IDS = "click_ids";
+      public static final String COLUMN_DISPLAYED_IN_SESSION = "displayed_in_session";
    }
 }

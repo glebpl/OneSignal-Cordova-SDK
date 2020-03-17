@@ -67,8 +67,7 @@ class NotificationChannelManager {
       Context context = notifJob.context;
       JSONObject jsonPayload = notifJob.jsonPayload;
 
-      NotificationManager notificationManager =
-            (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
+      NotificationManager notificationManager = OneSignalNotificationManager.getNotificationManager(context);
 
       if (notifJob.restoring)
          return createRestoreChannel(notificationManager);
@@ -175,7 +174,17 @@ class NotificationChannelManager {
       channel.setShowBadge(payload.optInt("bdg", 1) == 1);
       channel.setBypassDnd(payload.optInt("bdnd", 0) == 1);
 
+      OneSignal.onesignalLog(OneSignal.LOG_LEVEL.VERBOSE, "Creating notification channel with channel:\n" + channel.toString());
+      try {
       notificationManager.createNotificationChannel(channel);
+      } catch (IllegalArgumentException e) {
+         // TODO: Remove this try-catch once it is figured out which argument is causing Issue #895
+         //    try-catch added to prevent crashing from the illegal argument
+         //    Added logging above this try-catch so we can evaluate the payload of the next victim
+         //    to report a stacktrace
+         //    https://github.com/OneSignal/OneSignal-Android-SDK/issues/895
+         e.printStackTrace();
+      }
       return channel_id;
    }
    
@@ -210,8 +219,7 @@ class NotificationChannelManager {
       if (list == null)
          return;
 
-      NotificationManager notificationManager =
-         (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
+      NotificationManager notificationManager = OneSignalNotificationManager.getNotificationManager(context);
       
       Set<String> syncedChannelSet = new HashSet<>();
       int jsonArraySize = list.length();

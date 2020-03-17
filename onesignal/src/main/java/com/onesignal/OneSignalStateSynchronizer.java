@@ -27,6 +27,8 @@
 
 package com.onesignal;
 
+import android.support.annotation.Nullable;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import com.onesignal.OneSignal.ChangeTagsUpdateHandler;
@@ -72,12 +74,13 @@ class OneSignalStateSynchronizer {
       getEmailStateSynchronizer().syncUserState(fromSyncService);
    }
 
-   static void sendTags(JSONObject newTags, ChangeTagsUpdateHandler handler) {
+   static void sendTags(JSONObject newTags, @Nullable ChangeTagsUpdateHandler handler) {
       try {
          JSONObject jsonField = new JSONObject().put("tags", newTags);
          getPushStateSynchronizer().sendTags(jsonField, handler);
          getEmailStateSynchronizer().sendTags(jsonField, handler);
       } catch (JSONException e) {
+         if (handler != null)
          handler.onFailure(new OneSignal.SendTagsError(-1, "Encountered an error attempting to serialize your tags into JSON: " + e.getMessage() + "\n" + e.getStackTrace()));
          e.printStackTrace();
       }

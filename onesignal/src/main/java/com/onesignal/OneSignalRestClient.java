@@ -88,7 +88,7 @@ class OneSignalRestClient {
          public void run() {
             makeRequest(url, "PUT", jsonBody, responseHandler, TIMEOUT, null);
          }
-      }).start();
+      }, "OS_REST_ASYNC_PUT").start();
    }
 
    public static void post(final String url, final JSONObject jsonBody, final ResponseHandler responseHandler) {
@@ -96,7 +96,7 @@ class OneSignalRestClient {
          public void run() {
             makeRequest(url, "POST", jsonBody, responseHandler, TIMEOUT, null);
          }
-      }).start();
+      }, "OS_REST_ASYNC_POST").start();
    }
 
    public static void get(final String url, final ResponseHandler responseHandler, @NonNull final String cacheKey) {
@@ -104,7 +104,7 @@ class OneSignalRestClient {
          public void run() {
             makeRequest(url, null, null, responseHandler, GET_TIMEOUT, cacheKey);
          }
-      }).start();
+      }, "OS_REST_ASYNC_GET").start();
    }
 
    public static void getSync(final String url, final ResponseHandler responseHandler, @NonNull String cacheKey) {
@@ -212,6 +212,7 @@ class OneSignalRestClient {
                OneSignal.Log(OneSignal.LOG_LEVEL.DEBUG, "OneSignalRestClient: " + (method == null ? "GET" : method) + " - Using Cached response due to 304: " + cachedResponse);
                callbackThread = callResponseHandlerOnSuccess(responseHandler, cachedResponse);
             break;
+            case HttpURLConnection.HTTP_ACCEPTED:
             case HttpURLConnection.HTTP_OK: // 200
                // Fork: custom base url to be used as proxy
                OneSignal.Log(OneSignal.LOG_LEVEL.DEBUG, "OneSignalRestClient: Successfully finished request to: " + getBaseUrl() + url);
@@ -248,16 +249,17 @@ class OneSignalRestClient {
                if (inputStream == null)
                   inputStream = con.getInputStream();
 
+               String jsonResponse = null;
                if (inputStream != null) {
                   scanner = new Scanner(inputStream, "UTF-8");
-                  json = scanner.useDelimiter("\\A").hasNext() ? scanner.next() : "";
+                  jsonResponse = scanner.useDelimiter("\\A").hasNext() ? scanner.next() : "";
                   scanner.close();
-                  OneSignal.Log(OneSignal.LOG_LEVEL.WARN, "OneSignalRestClient: " + method + " RECEIVED JSON: " + json);
+                  OneSignal.Log(OneSignal.LOG_LEVEL.WARN, "OneSignalRestClient: " + method + " RECEIVED JSON: " + jsonResponse);
                }
                else
                   OneSignal.Log(OneSignal.LOG_LEVEL.WARN, "OneSignalRestClient: " + method + " HTTP Code: " + httpResponse + " No response body!");
 
-               callbackThread = callResponseHandlerOnFailure(responseHandler, httpResponse, null, null);
+               callbackThread = callResponseHandlerOnFailure(responseHandler, httpResponse, jsonResponse, null);
          }
       } catch (Throwable t) {
          if (t instanceof java.net.ConnectException || t instanceof java.net.UnknownHostException)
@@ -286,7 +288,7 @@ class OneSignalRestClient {
          public void run() {
             handler.onSuccess(response);
          }
-      });
+      }, "OS_REST_SUCCESS_CALLBACK");
       thread.start();
       
       return thread;
@@ -300,7 +302,7 @@ class OneSignalRestClient {
          public void run() {
             handler.onFailure(statusCode, response, throwable);
          }
-      });
+      }, "OS_REST_FAILURE_CALLBACK");
       thread.start();
       
       return thread;

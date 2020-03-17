@@ -107,7 +107,7 @@ class NotificationBundleProcessor {
             GenerateNotification.fromJsonPayload(notifJob);
 
       if (!notifJob.restoring && !notifJob.isInAppPreviewPush) {
-         saveNotification(notifJob, false);
+         processNotification(notifJob, false);
          try {
             JSONObject jsonObject = new JSONObject(notifJob.jsonPayload.toString());
             jsonObject.put("notificationId", notifJob.getAndroidId());
@@ -135,23 +135,35 @@ class NotificationBundleProcessor {
       return jsonArray;
    }
 
-
-   private static void saveNotification(Context context, Bundle bundle, boolean opened, int notificationId) {
+   private static void saveAndProcessNotification(Context context, Bundle bundle, boolean opened, int notificationId) {
       NotificationGenerationJob notifJob = new NotificationGenerationJob(context);
       notifJob.jsonPayload = bundleAsJSONObject(bundle);
       notifJob.overrideSettings = new NotificationExtenderService.OverrideSettings();
       notifJob.overrideSettings.androidNotificationId = notificationId;
-      
-      saveNotification(notifJob, opened);
+
+      processNotification(notifJob, opened);
    }
-   
+
+   /**
+    * Save notification, updates Outcomes, and sends Received Receipt if they are enabled.
+    */
+   static void processNotification(NotificationGenerationJob notifiJob, boolean opened) {
+      saveNotification(notifiJob, opened);
+
+      if (!notifiJob.isNotificationToDisplay())
+         return;
+      String notificationId = notifiJob.getApiNotificationId();
+      OutcomesUtils.markLastNotificationReceived(notificationId);
+      OSReceiveReceiptController.getInstance().sendReceiveReceipt(notificationId);
+   }
+
    // Saving the notification provides the following:
    //   * Prevent duplicates
    //   * Build summary notifications
    //   * Collapse key / id support - Used to lookup the android notification id later
    //   * Redisplay notifications after reboot, upgrade of app, or cold boot after a force kill.
    //   * Future - Public API to get a list of notifications
-   static void saveNotification(NotificationGenerationJob notifiJob, boolean opened) {
+   private static void saveNotification(NotificationGenerationJob notifiJob, boolean opened) {
       Context context = notifiJob.context;
       JSONObject jsonPayload = notifiJob.jsonPayload;
       
@@ -166,11 +178,9 @@ class NotificationBundleProcessor {
    
             writableDb.beginTransaction();
             
-            deleteOldNotifications(writableDb);
-            
             // Count any notifications with duplicated android notification ids as dismissed.
             // -1 is used to note never displayed
-            if (notifiJob.getAndroidIdWithoutCreate() != -1) {
+            if (notifiJob.isNotificationToDisplay()) {
                String whereStr = NotificationTable.COLUMN_NAME_ANDROID_NOTIFICATION_ID + " = " + notifiJob.getAndroidIdWithoutCreate();
    
                ContentValues values = new ContentValues();
@@ -258,13 +268,6 @@ class NotificationBundleProcessor {
             }
          }
       }
-   }
-
-   // Clean up old records after 1 week.
-   static void deleteOldNotifications(SQLiteDatabase writableDb) {
-      writableDb.delete(NotificationTable.TABLE_NAME,
-          NotificationTable.COLUMN_NAME_CREATED_TIME + " < " + ((System.currentTimeMillis() / 1000L) - 604800L),
-          null);
    }
 
    static @NonNull JSONObject bundleAsJSONObject(Bundle bundle) {
@@ -480,7 +483,7 @@ class NotificationBundleProcessor {
 
       // Save as a opened notification to prevent duplicates.
       if (!shouldDisplay(alert)) {
-         saveNotification(context, bundle, true, -1);
+         saveAndProcessNotification(context, bundle, true, -1);
          // Current thread is meant to be short lived.
          //    Make a new thread to do our OneSignal work on.
          new Thread(new Runnable() {

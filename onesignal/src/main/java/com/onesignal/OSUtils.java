@@ -55,16 +55,20 @@ import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
+import static com.onesignal.OneSignal.Log;
+
 class OSUtils {
 
    static final int UNINITIALIZABLE_STATUS = -999;
+
+   public static int MAX_NETWORK_REQUEST_ATTEMPT_COUNT = 3;
+   static final int[] NO_RETRY_NETWROK_REQUEST_STATUS_CODES = {401, 402, 403, 404, 410};
 
    public enum SchemaType {
       DATA("data"),
@@ -88,6 +92,14 @@ class OSUtils {
       }
    }
 
+   public static boolean shouldRetryNetworkRequest(int statusCode) {
+      for (int code : NO_RETRY_NETWROK_REQUEST_STATUS_CODES)
+         if (statusCode == code)
+            return false;
+
+      return true;
+   }
+
    int initializationChecker(Context context, int deviceType, String oneSignalAppId) {
       int subscribableStatus = 1;
 
@@ -95,13 +107,13 @@ class OSUtils {
          //noinspection ResultOfMethodCallIgnored
          UUID.fromString(oneSignalAppId);
       } catch (Throwable t) {
-         OneSignal.Log(OneSignal.LOG_LEVEL.FATAL, "OneSignal AppId format is invalid.\nExample: 'b2f7f966-d8cc-11e4-bed1-df8f05be55ba'\n", t);
+         Log(OneSignal.LOG_LEVEL.FATAL, "OneSignal AppId format is invalid.\nExample: 'b2f7f966-d8cc-11e4-bed1-df8f05be55ba'\n", t);
          return UNINITIALIZABLE_STATUS;
       }
 
       if ("b2f7f966-d8cc-11e4-bed1-df8f05be55ba".equals(oneSignalAppId) ||
           "5eb5a37e-b458-11e3-ac11-000c2940e62c".equals(oneSignalAppId))
-         OneSignal.Log(OneSignal.LOG_LEVEL.ERROR, "OneSignal Example AppID detected, please update to your app's id found on OneSignal.com");
+         Log(OneSignal.LOG_LEVEL.ERROR, "OneSignal Example AppID detected, please update to your app's id found on OneSignal.com");
 
       if (deviceType == UserState.DEVICE_TYPE_ANDROID) {
          Integer pushErrorType = checkForGooglePushLibrary();
@@ -140,15 +152,15 @@ class OSUtils {
       boolean hasGCMLibrary = hasGCMLibrary();
 
       if (!hasFCMLibrary && !hasGCMLibrary) {
-         OneSignal.Log(OneSignal.LOG_LEVEL.FATAL, "The Firebase FCM library is missing! Please make sure to include it in your project.");
+         Log(OneSignal.LOG_LEVEL.FATAL, "The Firebase FCM library is missing! Please make sure to include it in your project.");
          return UserState.PUSH_STATUS_MISSING_FIREBASE_FCM_LIBRARY;
       }
 
       if (hasGCMLibrary && !hasFCMLibrary)
-         OneSignal.Log(OneSignal.LOG_LEVEL.WARN, "GCM Library detected, please upgrade to Firebase FCM library as GCM is deprecated!");
+         Log(OneSignal.LOG_LEVEL.WARN, "GCM Library detected, please upgrade to Firebase FCM library as GCM is deprecated!");
 
       if (hasGCMLibrary && hasFCMLibrary)
-         OneSignal.Log(OneSignal.LOG_LEVEL.WARN, "Both GCM & FCM Libraries detected! Please remove the deprecated GCM library.");
+         Log(OneSignal.LOG_LEVEL.WARN, "Both GCM & FCM Libraries detected! Please remove the deprecated GCM library.");
 
       return null;
    }
@@ -185,12 +197,12 @@ class OSUtils {
       boolean hasNotificationManagerCompat = hasNotificationManagerCompat();
 
       if (!hasWakefulBroadcastReceiver && !hasNotificationManagerCompat) {
-         OneSignal.Log(OneSignal.LOG_LEVEL.FATAL, "Could not find the Android Support Library. Please make sure it has been correctly added to your project.");
+         Log(OneSignal.LOG_LEVEL.FATAL, "Could not find the Android Support Library. Please make sure it has been correctly added to your project.");
          return UserState.PUSH_STATUS_MISSING_ANDROID_SUPPORT_LIBRARY;
       }
 
       if (!hasWakefulBroadcastReceiver || !hasNotificationManagerCompat) {
-         OneSignal.Log(OneSignal.LOG_LEVEL.FATAL, "The included Android Support Library is to old or incomplete. Please update to the 26.0.0 revision or newer.");
+         Log(OneSignal.LOG_LEVEL.FATAL, "The included Android Support Library is to old or incomplete. Please update to the 26.0.0 revision or newer.");
          return UserState.PUSH_STATUS_OUTDATED_ANDROID_SUPPORT_LIBRARY;
       }
 
@@ -200,7 +212,7 @@ class OSUtils {
          && getTargetSdkVersion(context) >= Build.VERSION_CODES.O) {
          // Class was added in 26.0.0-beta2
          if (!hasJobIntentService()) {
-            OneSignal.Log(OneSignal.LOG_LEVEL.FATAL, "The included Android Support Library is to old or incomplete. Please update to the 26.0.0 revision or newer.");
+            Log(OneSignal.LOG_LEVEL.FATAL, "The included Android Support Library is to old or incomplete. Please update to the 26.0.0 revision or newer.");
             return UserState.PUSH_STATUS_OUTDATED_ANDROID_SUPPORT_LIBRARY;
          }
       }
@@ -252,7 +264,7 @@ class OSUtils {
          Bundle bundle = ai.metaData;
          return bundle.getString(metaName);
       } catch (Throwable t) {
-         OneSignal.Log(OneSignal.LOG_LEVEL.ERROR, "", t);
+         Log(OneSignal.LOG_LEVEL.ERROR, "", t);
       }
 
       return null;
@@ -455,4 +467,15 @@ class OSUtils {
       }
       return result;
    }
+
+   static boolean shouldLogMissingAppIdError(@Nullable String appId) {
+      if (appId != null)
+         return false;
+
+      // Wrapper SDKs can't normally call on Application.onCreate so just count this as informational.
+      Log(OneSignal.LOG_LEVEL.INFO, "OneSignal was not initialized, " +
+         "ensure to always initialize OneSignal from the onCreate of your Application class.");
+      return true;
+   }
+
 }
