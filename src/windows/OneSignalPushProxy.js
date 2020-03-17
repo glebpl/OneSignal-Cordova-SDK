@@ -84,11 +84,17 @@ module.exports = {
   setInFocusDisplaying: function (successCallback, errorCallback, params) { },
   getPermissionSubscriptionState: function (successCallback, errorCallback, params) { }
   // Fork: Method for android
-  createChannel: function (successCallback, errorCallback, params) { }
+  createChannel: function (channelId, channelName, options) { }
   // Fork: Method for android
-  deleteChannel: function (successCallback, errorCallback, params) { }
+  hasChannel: function (params, successCallback, errorCallback) {
+    if(successCallback) {
+      successCallback(true);
+    }
+  }
+  // Fork: Method for android
+  deleteChannel: function (channelId) { }
   // Fork: Method for android, will not be applied for windows
-  useProxy: function (successCallback, errorCallback, params) { }
+  useProxy: function (options) { }
 };
 
 require("cordova/exec/proxy").add("OneSignalPush", module.exports);

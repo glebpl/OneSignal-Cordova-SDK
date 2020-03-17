@@ -77,6 +77,8 @@
 // Fork: method for Android 8
 - (void)createChannel:(CDVInvokedUrlCommand *)command;
 // Fork: method for Android 8
+- (void)hasChannel:(CDVInvokedUrlCommand *)command;
+// Fork: method for Android 8
 - (void)deleteChannel:(CDVInvokedUrlCommand *)command;
 
 // in app

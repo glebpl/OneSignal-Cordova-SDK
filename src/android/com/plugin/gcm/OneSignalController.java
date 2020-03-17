@@ -347,6 +347,32 @@ public class OneSignalController {
 
   /**
    * Fork
+   * Checks if channel exists
+   * @param appContext
+   * @param callbackContext
+   * @param data
+   * @return
+   */
+  public static boolean checkChannelExists(Context appContext, CallbackContext callbackContext, JSONArray data) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      try {
+        String channelId = data.getString(0);
+        NotificationManager notificationManager = (NotificationManager) appContext.getSystemService(Context.NOTIFICATION_SERVICE);
+        NotificationChannel channel = notificationManager.getNotificationChannel(channelId);
+        CallbackHelper.callbackSuccessBoolean(callbackContext, channel != null);
+      } catch (Throwable e) {
+        e.printStackTrace();
+        CallbackHelper.callbackError(callbackContext, e.getMessage());
+      }
+    } else {
+      // fake true for older androids
+      CallbackHelper.callbackSuccessBoolean(callbackContext, true);
+    }
+    return true;
+  }
+
+  /**
+   * Fork
    * Method to delete channel
    * Used to change sound
    * @param appContext
